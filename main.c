@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
 	print_doublebox(INFINITY);
 	print_doublebox(-INFINITY);
 	print_doublebox(NAN);
+	print_doublebox(doublebox_bytes(DOUBLEBOX_MAX_NUMBER));
 	print_doublebox(doublebox_null());
 	print_doublebox(doublebox_undefined());
 	print_doublebox(doublebox_bool(false));
@@ -68,6 +69,7 @@ int main(int argc, char *argv[])
 0x7FF00000 0x00000000 = inf
 0xFFF00000 0x00000000 = -inf
 0x7FF80000 0x00000000 = nan
+0xFFF8FFFF 0xFFFFFFFF = nan
 0xFFF90000 0x00000000 = null
 0xFFFA0000 0x00000000 = undefined
 0xFFFB0000 0x00000000 = boolean false

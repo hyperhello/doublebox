@@ -115,7 +115,7 @@ double doublebox_empty()
 /* quickly check the type of doublebox */
 bool is_doublebox_double(const double d)
 {
-	return (*(uint64_t*)&d < DOUBLEBOX_MAX_NUMBER);
+	return (*(uint64_t*)&d <= DOUBLEBOX_MAX_NUMBER);
 }
 bool is_doublebox_null(const double d)
 {
