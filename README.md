@@ -7,7 +7,7 @@ Theory: In IEEE 754 64-bit floating point, a NaN can be represented by the high 
 	0xFFFB (1011) bool, with zero (false) or nonzero (true) in data area
 	0xFFFC (1100) integer or other data, 48 bits must be passed as uint64_t.
 	0xFFFD (1101) string, up to five chars that will be padded with trailing zeros.
-	0xFFFE (1101) custom, available for your adapted use 
+	0xFFFE (1110) custom, available for your adapted use 
 	0xFFFF (1111) empty, it's easy to memset an array with 0xFF.
 	
 There is no doublebox type. The code all just uses doubles, but you will probably want to typedef in your own project. Double numbers (from -inf to inf inclusive) just work as normal doubles. In some cases, such as the string type, you can reliably compare two doubleboxes with == and !=. 
