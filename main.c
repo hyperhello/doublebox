@@ -19,7 +19,7 @@ void print_doublebox(const double d)
 	const char* desc = buffer;
 	switch (get_doublebox_type(d))
 	{
-		case 0: 
+		case DOUBLEBOX_DOUBLE: 
 			sprintf(buffer, "%1.16lf", d); 
 			break;
 		case DOUBLEBOX_NULL: 
