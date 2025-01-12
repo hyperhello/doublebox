@@ -18,6 +18,8 @@
 	
 	ToDo: Need to check big endian compatibility.
 	
+	Note: This encoding technique keeps numerical doubles the same, which is the simplest way to do it. There is another reasonable system available: subtracting 0xFFF9000000000000 to encode, and adding it back to decode. This makes the encoding space go from 0x0000...0x0006. The usefulness of this is that 0x0000... can be a real pointer into 48-bit memory space, if your system would be better optimized in that way, at the cost of the translation to and from doubles.
+	
 */
 
 #include <stdio.h>
@@ -45,28 +47,32 @@
 
 #define DOUBLEBOX_TYPEMASK		0xFFFF000000000000
 #define DOUBLEBOX_DATAMASK		0x0000FFFFFFFFFFFF
-#define DOUBLEBOX_MAX_NUMBER	0xFFF8FFFFFFFFFFFF
+#define DOUBLEBOX_MAX_DOUBLE	0xFFF8FFFFFFFFFFFF		/* this NAN is the largest double */
 
-#define DOUBLEBOX_NULL 				0xFFF9000000000000
+/* these are returned from get_doublebox_type() */
+#define DOUBLEBOX_DOUBLE 			0x0000000000000000	
+#define DOUBLEBOX_NULL 				0xFFF9000000000000	
 #define DOUBLEBOX_UNDEFINED 	0xFFFA000000000000
 #define DOUBLEBOX_BOOL	 			0xFFFB000000000000
-#define DOUBLEBOX_FALSE 			0xFFFB000000000000
-#define DOUBLEBOX_TRUE 				0xFFFB000000000001		/* get_doublebox_bool() will return true for any nonzero data */
-#define DOUBLEBOX_INTEGER		 	0xFFFC000000000000
+#define DOUBLEBOX_INTEGER		 	0xFFFC000000000000		/* 48 bit encoded integer */
 #define DOUBLEBOX_STRING	 		0xFFFD000000000000
 #define DOUBLEBOX_CUSTOM		 	0xFFFE000000000000
-#define DOUBLEBOX_EMPTY 			0xFFFFFFFFFFFFFFFF
+#define DOUBLEBOX_EMPTY 			0xFFFF000000000000
 
 /* quickly create doubleboxes */
+
 double doublebox_bytes(const uint64_t i)
 {
 	return *(double*)&i;
 }
 double doublebox_double(double d)
 {
-	// this will clamp your double to regular NAN
-	uint64_t i = (*(uint64_t*)&d & DOUBLEBOX_MAX_NUMBER);
-	return *(double*)&i;
+	// this will convert an encoded doublebox d to a regular NAN
+	if (*(uint64_t*)&d > DOUBLEBOX_MAX_DOUBLE) 
+	{
+		return NAN;
+	}
+	return d;
 }
 double doublebox_null()
 {
@@ -80,7 +86,7 @@ double doublebox_undefined()
 }
 double doublebox_bool(const bool b)
 {
-	uint64_t i = b ? DOUBLEBOX_TRUE : DOUBLEBOX_FALSE;
+	uint64_t i = DOUBLEBOX_BOOL | (b ? 1 : 0);
 	return *(double*)&i;
 }
 double doublebox_integer(const uint64_t data)
@@ -112,10 +118,11 @@ double doublebox_empty()
 	return *(double*)&i;
 }
 
-/* quickly check the type of doublebox */
+/* quickly check the type of a doublebox */
+
 bool is_doublebox_double(const double d)
 {
-	return (*(uint64_t*)&d <= DOUBLEBOX_MAX_NUMBER);
+	return (*(uint64_t*)&d <= DOUBLEBOX_MAX_DOUBLE);
 }
 bool is_doublebox_null(const double d)
 {
@@ -131,7 +138,7 @@ bool is_doublebox_bool(const double d)
 }
 bool is_doublebox_false(const double d)
 {
-	return (*(uint64_t*)&d == DOUBLEBOX_FALSE);
+	return (*(uint64_t*)&d == DOUBLEBOX_BOOL);
 }
 bool is_doublebox_true(const double d)
 {
@@ -154,7 +161,17 @@ bool is_doublebox_empty(const double d)
 	return (*(uint64_t*)&d & DOUBLEBOX_TYPEMASK) == DOUBLEBOX_EMPTY;
 }
 
-/* request doublebox values */
+/* quickly request doublebox values */
+
+uint64_t get_doublebox_type(const double d)
+{
+	uint64_t i = *(uint64_t*)&d;
+	return (i <= DOUBLEBOX_MAX_DOUBLE) ? DOUBLEBOX_DOUBLE : (i & DOUBLEBOX_TYPEMASK);
+}
+uint64_t get_doublebox_bytes(const double d)
+{
+	return *(uint64_t*)&d;
+}
 bool get_doublebox_bool(const double d)
 {
 	return !!(*(uint64_t*)&d & DOUBLEBOX_DATAMASK);
